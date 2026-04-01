@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highest Grossing Films</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        p {
+            text-align: center;
+            color: #cbd5e1;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        input, select, button {
+            padding: 10px 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        input, select {
+            min-width: 220px;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #334155;
+            text-align: left;
+        }
+
+        th {
+            background: #334155;
+            cursor: pointer;
+        }
+
+        tr:hover {
+            background: #2b3a52;
+        }
+
+        .top-box {
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .top-box h2 {
+            margin-top: 0;
+        }
+
+        .muted {
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Highest Grossing Films</h1>
+        <p>Interactive webpage based on Wikipedia data</p>
+
+        <div class="top-box">
+            <h2>Top Film</h2>
+            <div id="topFilm" class="muted">Loading...</div>
+        </div>
+
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="Search by title">
+            <select id="yearFilter">
+                <option value="all">All years</option>
+            </select>
+            <button onclick="sortByTitle()">Sort by Title</button>
+            <button onclick="sortByYear()">Sort by Year</button>
+            <button onclick="sortByBoxOffice()">Sort by Box Office</button>
+            <button onclick="resetData()">Reset</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Release Year</th>
+                        <th>Director</th>
+                        <th>Box Office</th>
+                        <th>Country</th>
+                    </tr>
+                </thead>
+                <tbody id="filmsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let films = [];
+        let filteredFilms = [];
+
+        fetch("films.json")
+            .then(response => response.json())
+            .then(data => {
+                films = data;
+                filteredFilms = [...films];
+                renderTopFilm();
+                populateYearFilter();
+                renderTable(filteredFilms);
+            })
+            .catch(error => {
+                console.error("Error loading JSON:", error);
+                document.getElementById("filmsTableBody").innerHTML =
+                    "<tr><td colspan='5'>Failed to load data.</td></tr>";
+            });
+
+        function renderTable(data) {
+            const tableBody = document.getElementById("filmsTableBody");
+            tableBody.innerHTML = "";
+
+            data.forEach(film => {
+                const row = `
+                    <tr>
+                        <td>${film.title}</td>
+                        <td>${film.release_year ?? ""}</td>
+                        <td>${film.director}</td>
+                        <td>${film.box_office}</td>
+                        <td>${film.country}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        function renderTopFilm() {
+            if (films.length > 0) {
+                const top = films[0];
+                document.getElementById("topFilm").innerHTML =
+                    `<strong>${top.title}</strong> (${top.release_year}) — ${top.box_office}`;
+            }
+        }
+
+        function populateYearFilter() {
+            const yearFilter = document.getElementById("yearFilter");
+            const years = [...new Set(films.map(f => f.release_year).filter(y => y))].sort((a, b) => a - b);
+
+            years.forEach(year => {
+                const option = document.createElement("option");
+                option.value = year;
+                option.textContent = year;
+                yearFilter.appendChild(option);
+            });
+        }
+
+        function applyFilters() {
+            const searchValue = document.getElementById("searchInput").value.toLowerCase();
+            const selectedYear = document.getElementById("yearFilter").value;
+
+            filteredFilms = films.filter(film => {
+                const matchesSearch = film.title.toLowerCase().includes(searchValue);
+                const matchesYear = selectedYear === "all" || String(film.release_year) === selectedYear;
+                return matchesSearch && matchesYear;
+            });
+
+            renderTable(filteredFilms);
+        }
+
+        function sortByTitle() {
+            filteredFilms.sort((a, b) => a.title.localeCompare(b.title));
+            renderTable(filteredFilms);
+        }
+
+        function sortByYear() {
+            filteredFilms.sort((a, b) => (a.release_year || 0) - (b.release_year || 0));
+            renderTable(filteredFilms);
+        }
+
+        function sortByBoxOffice() {
+            filteredFilms.sort((a, b) => {
+                const aValue = parseInt(a.box_office.replace(/[$,]/g, "")) || 0;
+                const bValue = parseInt(b.box_office.replace(/[$,]/g, "")) || 0;
+                return bValue - aValue;
+            });
+            renderTable(filteredFilms);
+        }
+
+        function resetData() {
+            document.getElementById("searchInput").value = "";
+            document.getElementById("yearFilter").value = "all";
+            filteredFilms = [...films];
+            renderTable(filteredFilms);
+        }
+
+        document.getElementById("searchInput").addEventListener("input", applyFilters);
+        document.getElementById("yearFilter").addEventListener("change", applyFilters);
+    </script>
+</body>
+</html>
