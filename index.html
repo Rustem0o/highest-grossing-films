@@ -1,245 +1,257 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Highest Grossing Films</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<title>Films Project</title>
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #0f172a;
-            color: #ffffff;
-            padding: 20px;
-        }
+<style>
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+/* simple page style */
+body {
+    font-family: Arial;
+    background: #e0e0e0;
+    margin: 0;
+    padding: 20px;
+}
 
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-        }
+/* main container */
+.container {
+    max-width: 1100px;
+    margin: auto;
+}
 
-        p {
-            text-align: center;
-            color: #cbd5e1;
-            margin-bottom: 30px;
-        }
+/* title */
+h1 {
+    text-align: center;
+}
 
-        .controls {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
+/* skeuomorphic block */
+.box {
+    background: #e0e0e0;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 8px 8px 15px #bebebe,
+               -8px -8px 15px #ffffff;
+    margin-bottom: 20px;
+}
 
-        input, select, button {
-            padding: 10px 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-        }
+/* inputs */
+input, select {
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    margin-right: 10px;
+    box-shadow: inset 4px 4px 8px #bebebe,
+                inset -4px -4px 8px #ffffff;
+}
 
-        input, select {
-            min-width: 220px;
-        }
+/* buttons */
+button {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    background: #e0e0e0;
+    cursor: pointer;
+    box-shadow: 5px 5px 10px #bebebe,
+               -5px -5px 10px #ffffff;
+}
 
-        button {
-            background: #2563eb;
-            color: white;
-            cursor: pointer;
-        }
+/* click effect */
+button:active {
+    box-shadow: inset 5px 5px 10px #bebebe,
+                inset -5px -5px 10px #ffffff;
+}
 
-        button:hover {
-            background: #1d4ed8;
-        }
+/* table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-        .table-wrapper {
-            overflow-x: auto;
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 12px;
-        }
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+/* popcorn icon */
+.popcorn {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    font-size: 40px;
+    cursor: pointer;
+    background: #e0e0e0;
+    padding: 10px;
+    border-radius: 50%;
+    box-shadow: 6px 6px 12px #bebebe,
+               -6px -6px 12px #ffffff;
+}
 
-        th, td {
-            padding: 12px;
-            border-bottom: 1px solid #334155;
-            text-align: left;
-        }
+/* click effect */
+.popcorn:active {
+    box-shadow: inset 6px 6px 12px #bebebe,
+                inset -6px -6px #ffffff;
+}
 
-        th {
-            background: #334155;
-            cursor: pointer;
-        }
-
-        tr:hover {
-            background: #2b3a52;
-        }
-
-        .top-box {
-            background: #1e293b;
-            padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-
-        .top-box h2 {
-            margin-top: 0;
-        }
-
-        .muted {
-            color: #cbd5e1;
-        }
-    </style>
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Highest Grossing Films</h1>
-        <p>Interactive webpage based on Wikipedia data</p>
 
-        <div class="top-box">
-            <h2>Top Film</h2>
-            <div id="topFilm" class="muted">Loading...</div>
-        </div>
+<!-- popcorn icon -->
+<div class="popcorn">🍿</div>
 
-        <div class="controls">
-            <input type="text" id="searchInput" placeholder="Search by title">
-            <select id="yearFilter">
-                <option value="all">All years</option>
-            </select>
-            <button onclick="sortByTitle()">Sort by Title</button>
-            <button onclick="sortByYear()">Sort by Year</button>
-            <button onclick="sortByBoxOffice()">Sort by Box Office</button>
-            <button onclick="resetData()">Reset</button>
-        </div>
+<div class="container">
 
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Release Year</th>
-                        <th>Director</th>
-                        <th>Box Office</th>
-                        <th>Country</th>
-                    </tr>
-                </thead>
-                <tbody id="filmsTableBody"></tbody>
-            </table>
-        </div>
-    </div>
+<h1>Highest Grossing Films</h1>
 
-    <script>
-        let films = [];
-        let filteredFilms = [];
+<!-- top film block -->
+<div class="box">
+    <h3>Top film</h3>
+    <p id="topFilm">loading...</p>
+</div>
 
-        fetch("films.json")
-            .then(response => response.json())
-            .then(data => {
-                films = data;
-                filteredFilms = [...films];
-                renderTopFilm();
-                populateYearFilter();
-                renderTable(filteredFilms);
-            })
-            .catch(error => {
-                console.error("Error loading JSON:", error);
-                document.getElementById("filmsTableBody").innerHTML =
-                    "<tr><td colspan='5'>Failed to load data.</td></tr>";
-            });
+<!-- controls -->
+<div class="box">
 
-        function renderTable(data) {
-            const tableBody = document.getElementById("filmsTableBody");
-            tableBody.innerHTML = "";
+    <!-- search input -->
+    <input type="text" id="search" placeholder="search film">
 
-            data.forEach(film => {
-                const row = `
-                    <tr>
-                        <td>${film.title}</td>
-                        <td>${film.release_year ?? ""}</td>
-                        <td>${film.director}</td>
-                        <td>${film.box_office}</td>
-                        <td>${film.country}</td>
-                    </tr>
-                `;
-                tableBody.innerHTML += row;
-            });
-        }
+    <!-- year filter -->
+    <select id="year">
+        <option value="all">all years</option>
+    </select>
 
-        function renderTopFilm() {
-            if (films.length > 0) {
-                const top = films[0];
-                document.getElementById("topFilm").innerHTML =
-                    `<strong>${top.title}</strong> (${top.release_year}) — ${top.box_office}`;
-            }
-        }
+    <!-- buttons -->
+    <button onclick="sortTitle()">sort title</button>
+    <button onclick="sortYear()">sort year</button>
+    <button onclick="reset()">reset</button>
 
-        function populateYearFilter() {
-            const yearFilter = document.getElementById("yearFilter");
-            const years = [...new Set(films.map(f => f.release_year).filter(y => y))].sort((a, b) => a - b);
+</div>
 
-            years.forEach(year => {
-                const option = document.createElement("option");
-                option.value = year;
-                option.textContent = year;
-                yearFilter.appendChild(option);
-            });
-        }
+<!-- table -->
+<div class="box">
+<table>
+<thead>
+<tr>
+    <th>title</th>
+    <th>year</th>
+    <th>director</th>
+    <th>money</th>
+</tr>
+</thead>
 
-        function applyFilters() {
-            const searchValue = document.getElementById("searchInput").value.toLowerCase();
-            const selectedYear = document.getElementById("yearFilter").value;
+<tbody id="table"></tbody>
 
-            filteredFilms = films.filter(film => {
-                const matchesSearch = film.title.toLowerCase().includes(searchValue);
-                const matchesYear = selectedYear === "all" || String(film.release_year) === selectedYear;
-                return matchesSearch && matchesYear;
-            });
+</table>
+</div>
 
-            renderTable(filteredFilms);
-        }
+</div>
 
-        function sortByTitle() {
-            filteredFilms.sort((a, b) => a.title.localeCompare(b.title));
-            renderTable(filteredFilms);
-        }
+<script>
 
-        function sortByYear() {
-            filteredFilms.sort((a, b) => (a.release_year || 0) - (b.release_year || 0));
-            renderTable(filteredFilms);
-        }
+// load data from json file
+// here we get films list
+let films = []
+let current = []
 
-        function sortByBoxOffice() {
-            filteredFilms.sort((a, b) => {
-                const aValue = parseInt(a.box_office.replace(/[$,]/g, "")) || 0;
-                const bValue = parseInt(b.box_office.replace(/[$,]/g, "")) || 0;
-                return bValue - aValue;
-            });
-            renderTable(filteredFilms);
-        }
+fetch("films.json")
+.then(r => r.json())
+.then(data => {
+    films = data
+    current = [...films]
 
-        function resetData() {
-            document.getElementById("searchInput").value = "";
-            document.getElementById("yearFilter").value = "all";
-            filteredFilms = [...films];
-            renderTable(filteredFilms);
-        }
+    showTop()
+    fillYears()
+    draw(current)
+})
 
-        document.getElementById("searchInput").addEventListener("input", applyFilters);
-        document.getElementById("yearFilter").addEventListener("change", applyFilters);
-    </script>
+// this function shows films in table
+function draw(arr) {
+    let html = ""
+
+    for (let f of arr) {
+        html += `
+        <tr>
+            <td>${f.title}</td>
+            <td>${f.release_year}</td>
+            <td>${f.director}</td>
+            <td>${f.box_office}</td>
+        </tr>
+        `
+    }
+
+    document.getElementById("table").innerHTML = html
+}
+
+// show first film (top one)
+function showTop() {
+    if (films.length > 0) {
+        let f = films[0]
+        document.getElementById("topFilm").innerText =
+            f.title + " (" + f.release_year + ")"
+    }
+}
+
+// fill dropdown with years
+function fillYears() {
+    let y = document.getElementById("year")
+
+    let years = [...new Set(films.map(f => f.release_year))]
+
+    for (let i of years) {
+        let op = document.createElement("option")
+        op.value = i
+        op.text = i
+        y.appendChild(op)
+    }
+}
+
+// filter films by search and year
+function update() {
+
+    let text = document.getElementById("search").value.toLowerCase()
+    let year = document.getElementById("year").value
+
+    current = films.filter(f => {
+
+        let ok1 = f.title.toLowerCase().includes(text)
+        let ok2 = (year == "all") || (f.release_year == year)
+
+        return ok1 && ok2
+    })
+
+    draw(current)
+}
+
+// sort by title
+function sortTitle() {
+    current.sort((a,b)=> a.title.localeCompare(b.title))
+    draw(current)
+}
+
+// sort by year
+function sortYear() {
+    current.sort((a,b)=> a.release_year - b.release_year)
+    draw(current)
+}
+
+// reset table
+function reset() {
+    current = [...films]
+    draw(current)
+}
+
+// click popcorn
+document.querySelector(".popcorn").onclick = () => {
+    alert("Time to watch movies 🍿")
+}
+
+// events
+document.getElementById("search").addEventListener("input", update)
+document.getElementById("year").addEventListener("change", update)
+
+</script>
+
 </body>
 </html>
