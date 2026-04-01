@@ -1,31 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Films Project</title>
+<title>Films</title>
 
 <style>
-
-/* simple page style */
 body {
     font-family: Arial;
     background: #e0e0e0;
-    margin: 0;
     padding: 20px;
 }
 
-/* main container */
-.container {
-    max-width: 1100px;
-    margin: auto;
-}
-
-/* title */
-h1 {
-    text-align: center;
-}
-
-/* skeuomorphic block */
 .box {
     background: #e0e0e0;
     padding: 15px;
@@ -35,221 +20,138 @@ h1 {
     margin-bottom: 20px;
 }
 
-/* inputs */
-input, select {
+input, select, button {
     padding: 8px;
     border-radius: 8px;
     border: none;
-    margin-right: 10px;
-    box-shadow: inset 4px 4px 8px #bebebe,
-                inset -4px -4px 8px #ffffff;
+    margin: 5px;
 }
 
-/* buttons */
 button {
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: none;
-    background: #e0e0e0;
-    cursor: pointer;
     box-shadow: 5px 5px 10px #bebebe,
                -5px -5px 10px #ffffff;
 }
 
-/* click effect */
-button:active {
-    box-shadow: inset 5px 5px 10px #bebebe,
-                inset -5px -5px 10px #ffffff;
-}
-
-/* table */
 table {
     width: 100%;
-    border-collapse: collapse;
 }
 
-th, td {
+td, th {
     padding: 10px;
-    border-bottom: 1px solid #ccc;
 }
 
-/* popcorn icon */
 .popcorn {
     position: fixed;
     right: 20px;
     bottom: 20px;
     font-size: 40px;
-    cursor: pointer;
-    background: #e0e0e0;
-    padding: 10px;
-    border-radius: 50%;
-    box-shadow: 6px 6px 12px #bebebe,
-               -6px -6px 12px #ffffff;
 }
-
-/* click effect */
-.popcorn:active {
-    box-shadow: inset 6px 6px 12px #bebebe,
-                inset -6px -6px #ffffff;
-}
-
 </style>
+
 </head>
 
 <body>
 
-<!-- popcorn icon -->
-<div class="popcorn">🍿</div>
+<h1>Films</h1>
 
-<div class="container">
-
-<h1>Highest Grossing Films</h1>
-
-<!-- top film block -->
 <div class="box">
-    <h3>Top film</h3>
-    <p id="topFilm">loading...</p>
+<input id="search" placeholder="search">
+<select id="year">
+<option value="all">all</option>
+</select>
+
+<button onclick="sortTitle()">title</button>
+<button onclick="sortYear()">year</button>
+<button onclick="sortMoney()">money</button>
 </div>
 
-<!-- controls -->
-<div class="box">
-
-    <!-- search input -->
-    <input type="text" id="search" placeholder="search film">
-
-    <!-- year filter -->
-    <select id="year">
-        <option value="all">all years</option>
-    </select>
-
-    <!-- buttons -->
-    <button onclick="sortTitle()">sort title</button>
-    <button onclick="sortYear()">sort year</button>
-    <button onclick="reset()">reset</button>
-
-</div>
-
-<!-- table -->
 <div class="box">
 <table>
-<thead>
 <tr>
-    <th>title</th>
-    <th>year</th>
-    <th>director</th>
-    <th>money</th>
+<th>title</th>
+<th>year</th>
+<th>director</th>
+<th>money</th>
+<th>country</th>
 </tr>
-</thead>
-
-<tbody id="table"></tbody>
-
+<tbody id="t"></tbody>
 </table>
 </div>
 
-</div>
+<div class="popcorn">🍿</div>
 
 <script>
 
-// load data from json file
-// here we get films list
-let films = []
-let current = []
+let data = []
+let cur = []
 
 fetch("films.json")
-.then(r => r.json())
-.then(data => {
-    films = data
-    current = [...films]
-
-    showTop()
+.then(r=>r.json())
+.then(d=>{
+    data = d
+    cur = [...data]
     fillYears()
-    draw(current)
+    draw(cur)
 })
 
-// this function shows films in table
-function draw(arr) {
-    let html = ""
-
-    for (let f of arr) {
-        html += `
+function draw(arr){
+    let html=""
+    for(let f of arr){
+        html+=`
         <tr>
-            <td>${f.title}</td>
-            <td>${f.release_year}</td>
-            <td>${f.director}</td>
-            <td>${f.box_office}</td>
-        </tr>
-        `
+        <td>${f.title}</td>
+        <td>${f.release_year}</td>
+        <td>${f.director}</td>
+        <td>${f.box_office}</td>
+        <td>${f.country}</td>
+        </tr>`
     }
-
-    document.getElementById("table").innerHTML = html
+    document.getElementById("t").innerHTML=html
 }
 
-// show first film (top one)
-function showTop() {
-    if (films.length > 0) {
-        let f = films[0]
-        document.getElementById("topFilm").innerText =
-            f.title + " (" + f.release_year + ")"
-    }
-}
-
-// fill dropdown with years
-function fillYears() {
-    let y = document.getElementById("year")
-
-    let years = [...new Set(films.map(f => f.release_year))]
-
-    for (let i of years) {
-        let op = document.createElement("option")
-        op.value = i
-        op.text = i
-        y.appendChild(op)
+function fillYears(){
+    let y=document.getElementById("year")
+    let ys=[...new Set(data.map(f=>f.release_year))]
+    for(let i of ys){
+        let o=document.createElement("option")
+        o.value=i
+        o.text=i
+        y.appendChild(o)
     }
 }
 
-// filter films by search and year
-function update() {
+function update(){
+    let s=document.getElementById("search").value.toLowerCase()
+    let y=document.getElementById("year").value
 
-    let text = document.getElementById("search").value.toLowerCase()
-    let year = document.getElementById("year").value
-
-    current = films.filter(f => {
-
-        let ok1 = f.title.toLowerCase().includes(text)
-        let ok2 = (year == "all") || (f.release_year == year)
-
-        return ok1 && ok2
+    cur=data.filter(f=>{
+        return f.title.toLowerCase().includes(s) &&
+        (y=="all"||f.release_year==y)
     })
-
-    draw(current)
+    draw(cur)
 }
 
-// sort by title
-function sortTitle() {
-    current.sort((a,b)=> a.title.localeCompare(b.title))
-    draw(current)
+function sortTitle(){
+    cur.sort((a,b)=>a.title.localeCompare(b.title))
+    draw(cur)
 }
 
-// sort by year
-function sortYear() {
-    current.sort((a,b)=> a.release_year - b.release_year)
-    draw(current)
+function sortYear(){
+    cur.sort((a,b)=>a.release_year-b.release_year)
+    draw(cur)
 }
 
-// reset table
-function reset() {
-    current = [...films]
-    draw(current)
+function sortMoney(){
+    cur.sort((a,b)=>{
+        let x=parseInt(a.box_office.replace(/[$,]/g,""))
+        let y=parseInt(b.box_office.replace(/[$,]/g,""))
+        return y-x
+    })
+    draw(cur)
 }
 
-// click popcorn
-document.querySelector(".popcorn").onclick = () => {
-    alert("Time to watch movies 🍿")
-}
-
-// events
-document.getElementById("search").addEventListener("input", update)
-document.getElementById("year").addEventListener("change", update)
+document.getElementById("search").oninput=update
+document.getElementById("year").onchange=update
 
 </script>
 
